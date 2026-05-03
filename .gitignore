@@ -1,0 +1,5 @@
+.platformio/
+node_modules/
+.env
+__pycache__/
+*.pyc
