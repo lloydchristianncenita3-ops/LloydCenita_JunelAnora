@@ -1,9 +1,19 @@
+import os
+import sys
+from pathlib import Path
+
 from flask import Flask, render_template, request, redirect, Response
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from app.database import Session, engine, Base
 from app.models import Customer, Bag, Order
-import os
 
 app = Flask(__name__, template_folder="templates")
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = BASE_DIR.parent
+IMAGE_DIR = PROJECT_DIR / "static" / "images"
 
 # CREATE TABLES
 Base.metadata.create_all(engine)
@@ -18,8 +28,11 @@ def seed_data():
         if db.query(Bag).count() == 0:
 
             def load_image(filename):
-                BASE_DIR = os.path.dirname(__file__)
-                path = os.path.join(BASE_DIR, "static", "images", filename)
+                path = IMAGE_DIR / filename
+                if not path.exists():
+                    print(f"SEED WARNING: image not found: {path}")
+                    return None
+
                 with open(path, "rb") as f:
                     return f.read()
 
@@ -57,7 +70,10 @@ def seed_data():
         db.close()
 
 
-seed_data()
+try:
+    seed_data()
+except Exception as e:
+    print("SEED ERROR:", e)
 
 
 # ===============================
@@ -122,4 +138,5 @@ def get_image(bag_id):
 # RUN APP
 # ===============================
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=500, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

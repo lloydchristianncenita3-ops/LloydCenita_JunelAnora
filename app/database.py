@@ -1,12 +1,17 @@
+import os
+from pathlib import Path
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, scoped_session
 
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = BASE_DIR.parent
+DATABASE_PATH = Path(os.environ.get("DATABASE_PATH", PROJECT_DIR / "database.db"))
+
 engine = create_engine(
-    "mysql+pymysql://root:@localhost/mens_bag_database",
-    pool_pre_ping=True  # 🔥 prevents dead connections
+    "sqlite:///" + str(DATABASE_PATH),
+    connect_args={"check_same_thread": False}
 )
 
-# ✅ FIX: use scoped_session instead of single global session
 Session = scoped_session(sessionmaker(bind=engine))
-
 Base = declarative_base()
